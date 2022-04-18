@@ -7,7 +7,7 @@ file = open("texto.txt", "r")
 #Declaración de variables
 # variables = list(string.ascii_letters)
 variables = ["a", "b", "c"]
-operadores = ["+", "-", "*", "^", "(", ")", ";"]
+operadores = ["+", "-", "*", "^", ";"]
 numeros = ["1","2","3","4","5","6","7","8","9","0"]
 tempText = ""
 stopCategoria = False
@@ -196,18 +196,24 @@ def revisar_operador(string_temp):
             if string_temp == ";":
                 return es_operador, False, diccionario_lexico
             return es_operador, False, diccionario_lexico
+    return es_operador, False, diccionario_lexico
                         
 
-# def revisar_parentesis(string_temp):
-#     parentesis_revisado = False
-#     if parentesis_revisado == "(" or parentesis_revisado == ")":
-#         parentesis_revisado = True
-#         diccionario_lexico[string_temp] = "parentesis"
-#         return parentesis_revisado, False, diccionario_lexico
-#     return parentesis_revisado, False, diccionario_lexico
-
-def funcion_temp():
-    return mensaje_exito, flag_error, diccionario_lexico
+def revisar_parentesis(string_temp, apertura):
+    parentesis_revisado = False
+    if string_temp == "(":
+        parentesis_revisado = True
+        if apertura == True:
+            return parentesis_revisado, apertura, True, diccionario_lexico
+        diccionario_lexico[string_temp] = "parentesis"
+        return parentesis_revisado, True, False, diccionario_lexico
+    elif string_temp == ")":
+        parentesis_revisado = True
+        if apertura == False:
+            return parentesis_revisado, apertura, True, diccionario_lexico
+        diccionario_lexico[string_temp] = "parentesis"
+        return parentesis_revisado, False, False, diccionario_lexico
+    return parentesis_revisado, apertura, False, diccionario_lexico
 
 def cuatro(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
     string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
@@ -216,9 +222,18 @@ def cuatro(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionari
         if flag_error == False:
             if list(diccionario_lexico)[-1] == ";":
                 return mensaje_exito, flag_error, diccionario_lexico
+            if lista_lexica[-1] != ";":
+                return mensaje_error, True, diccionario_lexico 
             texto, flag_error, diccionario_lexico = tres(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
             return texto, flag_error, diccionario_lexico
-    return mensaje_error, flag_error, diccionario_lexico
+    if string_temp == ")":
+        for i in range(len(lista_lexica)-indice_cont_lexico):
+            if lista_lexica[i] == "(":
+                diccionario_lexico[string_temp] = "parentesis"
+                texto, flag_error, diccionario_lexico = cuatro(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+                return texto, flag_error, diccionario_lexico
+        return mensaje_error, True, diccionario_lexico
+    return mensaje_error, True, diccionario_lexico
 
 def tres(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
     string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
@@ -235,10 +250,21 @@ def tres(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_
             texto, flag_error, diccionario_lexico = cuatro(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
             return texto, flag_error, diccionario_lexico
     # Revisa si el valor es un parentesis ()
-    # parentesis_revisado, flag_error, diccionario_lexico = revisar_parentesis(string_temp)
-    
-
-    return mensaje_error, flag_error, diccionario_lexico
+    if string_temp == "(":
+        for i in range(len(lista_lexica)-indice_cont_lexico):
+            if string_temp == lista_lexica[i]:
+                return mensaje_error, True, diccionario_lexico
+        diccionario_lexico[string_temp] = "parentesis"
+        texto, flag_error, diccionario_lexico = tres(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+        return texto, flag_error, diccionario_lexico
+    # elif string_temp == ")":
+    #     for i in range(len(lista_lexica)-indice_cont_lexico):
+    #         if lista_lexica[i] == "(":
+    #             diccionario_lexico[string_temp] = "parentesis"
+    #             texto, flag_error, diccionario_lexico = cuatro(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+    #             return texto, flag_error, diccionario_lexico
+    #     return mensaje_error, True, diccionario_lexico
+    return mensaje_error, True, diccionario_lexico
 
 def dos_revisar_igual(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
     string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
@@ -246,8 +272,7 @@ def dos_revisar_igual(lista_lexica, cont_lexico, indice_cont_lexico, flag_error,
         diccionario_lexico[string_temp] = "asignacion"
         texto, flag_error, diccionario_lexico = tres(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
         return texto, flag_error, diccionario_lexico
-    flag_error = True
-    return mensaje_error, flag_error, diccionario_lexico
+    return mensaje_error, True, diccionario_lexico
 
 def uno_revisar_variable(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
     # Variable para sacar el primer elemento de la lista
@@ -270,6 +295,8 @@ indice_cont_lexico = 0
 string_comentario = ""
 flag_comentario = False
 flag_error = False
+apertura = False
+apertura_opuesta = True
 mensaje_error = "Ocurrio en error. Favor de revisar codigo"
 mensaje_exito = "Exito."
 
@@ -305,9 +332,16 @@ for line in file:
 
     print(texto)
 
+    if flag_error == True:
+        break
+
     lista_lexica.append(string_comentario)
     suma_lista_lexica += lista_lexica
-    del suma_lista_lexica[-1]
+    if suma_lista_lexica[-1] == "":
+        del suma_lista_lexica[-1]
+    # print("Suma Lista Lexica")
+    # print(suma_lista_lexica)
+    diccionario_lexico[string_comentario] = "comentario"
     suma_diccionario_lexico.update(diccionario_lexico)
 
     lista_lexica = []
@@ -324,19 +358,29 @@ html_string = "<p>"
 
 html = open("index.html", "w")
 
-for i in range(len(suma_lista_lexica)):
-    llave = suma_lista_lexica[i]
-    if suma_diccionario_lexico[llave] == "variable":
-        html_string += "<span style=\"color:blue\">" + llave + "</span>" + " "
-    elif suma_diccionario_lexico[llave] == "asignacion": 
-        html_string += "<span style=\"color:yellow\">" + llave + "</span>" + " "
-    elif suma_diccionario_lexico[llave] == "numero": 
-        html_string += "<span style=\"color:green\">" + llave + "</span>" + " "
-    elif suma_diccionario_lexico[llave] == "operador": 
-        if llave == ";":
-            html_string += "<span style=\"color:red\">" + llave + "</span></p>"
-            html.write(html_string)
-            html_string = ""
-        else: 
-            html_string += "<span style=\"color:orange\">" + llave + "</span>" + " "
-            
+if flag_error == False:
+    for i in range(len(suma_lista_lexica)):
+        llave = suma_lista_lexica[i]
+        if suma_diccionario_lexico[llave] == "variable":
+            html_string += "<span style=\"color:blue\">" + llave + "</span>" + " "
+        elif suma_diccionario_lexico[llave] == "asignacion": 
+            html_string += "<span style=\"color:yellow\">" + llave + "</span>" + " "
+        elif suma_diccionario_lexico[llave] == "numero": 
+            html_string += "<span style=\"color:green\">" + llave + "</span>" + " "
+        elif suma_diccionario_lexico[llave] == "operador": 
+            if llave == ";":
+                html_string += "<span style=\"color:black\">" + llave + "</span>"
+                # if suma_diccionario_lexico[suma_lista_lexica[i+1]] == "comentario":
+                #     html_string += "<span style=\"color:black\">" + llave + "</span>" + " "
+                # else:
+                html_string += "</p>"
+                html.write(html_string)
+                html_string = "<p>"
+            else: 
+                html_string += "<span style=\"color:orange\">" + llave + "</span>" + " "
+        elif suma_diccionario_lexico[llave] == "parentesis":
+            html_string += "<span style=\"color:#e40859\">" + llave + "</span>" + " "
+        elif suma_diccionario_lexico[llave] == "comentario": 
+            html_string += "<span style=\"color:gray\">" + llave + "</span>" + " " 
+else: 
+    html.write("<p><span style=\"color:red\">" + mensaje_error+ "</span><p>")
