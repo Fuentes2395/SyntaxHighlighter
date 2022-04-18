@@ -1,12 +1,13 @@
+
 import string
 
 # Parte 1: Tarea pasada
 file = open("texto.txt", "r")
 
 #Declaración de variables
-variables = list(string.ascii_letters)
-# variables = ["a", "b", "c"]
-operadores = ["+", "-", "*", "=", "^", "(", ")", ";"]
+# variables = list(string.ascii_letters)
+variables = ["a", "b", "c"]
+operadores = ["+", "-", "*", "^", "(", ")", ";"]
 numeros = ["1","2","3","4","5","6","7","8","9","0"]
 tempText = ""
 stopCategoria = False
@@ -143,67 +144,127 @@ listaValores = []
 
 # file.close()
 
-def revisar_variables(string_temp, flag_error, diccionario_lexico):
+def revisar_variable(string_temp):
+    es_variable = False
     for i in range(len(string_temp)):
         for j in range(len(variables)):
             if string_temp[i] == variables[j]:
+                es_variable = True
                 cont_numeros = 1
                 while i+cont_numeros < len(string_temp):
                     # Revisa si a lado de la variable existe un operador
                     for k in range(len(operadores)):
                         if string_temp[i+cont_numeros] == operadores[k]:
-                            flag_error = True
-                            return False
+                            return es_variable, True, diccionario_lexico
                     # Revisa si a lado de la variable existe un número
                     for k in range(len(numeros)):
                         if string_temp[i+cont_numeros] == numeros[k]:
-                            flag_error = True
-                            return False
+                            return es_variable, True, diccionario_lexico
                     cont_numeros += 1
-    return True
+                diccionario_lexico[string_temp] = "variable"
+                break
+    return es_variable, False, diccionario_lexico
+
+def revisar_numero(string_temp):
+    es_numero = False
+    for i in range(len(numeros)):
+        if string_temp[0] == numeros[i]:
+            es_numero = True
+            cont_numeros = 1
+            while cont_numeros < len(string_temp):
+                for j in range(len(operadores)):
+                    if string_temp[cont_numeros] == operadores[j]:
+                        return es_numero, True, diccionario_lexico
+                for j in range(len(variables)):
+                    if string_temp[cont_numeros] == variables[j]:
+                        if string_temp[cont_numeros] == "E":
+                            break
+                        return es_numero, True, diccionario_lexico
+                cont_numeros += 1
+            diccionario_lexico[string_temp] = "numero"
+            break
+    return es_numero, False, diccionario_lexico
+
+def revisar_operador(string_temp):
+    es_operador = False
+    if len(string_temp) > 1:
+        return es_operador, True, diccionario_lexico
+    for i in range(len(operadores)):
+        if string_temp == operadores[i]:
+            es_operador = True
+            diccionario_lexico[string_temp] = "operador"
+            if string_temp == ";":
+                return es_operador, False, diccionario_lexico
+            return es_operador, False, diccionario_lexico
+                        
+
+# def revisar_parentesis(string_temp):
+#     parentesis_revisado = False
+#     if parentesis_revisado == "(" or parentesis_revisado == ")":
+#         parentesis_revisado = True
+#         diccionario_lexico[string_temp] = "parentesis"
+#         return parentesis_revisado, False, diccionario_lexico
+#     return parentesis_revisado, False, diccionario_lexico
+
+def funcion_temp():
+    return mensaje_exito, flag_error, diccionario_lexico
+
+def cuatro(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
+    string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
+    operador_revisado, flag_error, diccionario_lexico = revisar_operador(string_temp)
+    if operador_revisado == True:
+        if flag_error == False:
+            if list(diccionario_lexico)[-1] == ";":
+                return mensaje_exito, flag_error, diccionario_lexico
+            texto, flag_error, diccionario_lexico = tres(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+            return texto, flag_error, diccionario_lexico
+    return mensaje_error, flag_error, diccionario_lexico
 
 def tres(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
-    # string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
-    # correcto = True
-    # correcto = revisar_variables(string_temp, flag_error, diccionario_lexico)
+    string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
+    # Revisa si el valor es una variable
+    variable_revisada, flag_error, diccionario_lexico = revisar_variable(string_temp)
+    if variable_revisada == True:
+        if flag_error == False:
+            texto, flag_error, diccionario_lexico = cuatro(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+            return texto, flag_error, diccionario_lexico
+    # Revisa si el valor es un número
+    numero_revisado, flag_error, diccionario_lexico = revisar_numero(string_temp)
+    if numero_revisado == True:
+        if flag_error == False:
+            texto, flag_error, diccionario_lexico = cuatro(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+            return texto, flag_error, diccionario_lexico
+    # Revisa si el valor es un parentesis ()
+    # parentesis_revisado, flag_error, diccionario_lexico = revisar_parentesis(string_temp)
+    
 
-    return mensaje_exito, flag_error, diccionario_lexico
+    return mensaje_error, flag_error, diccionario_lexico
 
 def dos_revisar_igual(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
     string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
     if string_temp == "=":
-        diccionario_lexico[string_temp] = "asignación"
+        diccionario_lexico[string_temp] = "asignacion"
         texto, flag_error, diccionario_lexico = tres(lista_lexica, cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
         return texto, flag_error, diccionario_lexico
     flag_error = True
     return mensaje_error, flag_error, diccionario_lexico
 
 def uno_revisar_variable(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico):
+    # Variable para sacar el primer elemento de la lista
     string_temp = lista_lexica[cont_lexico - indice_cont_lexico]
-    for i in range(len(string_temp)):
-        for j in range(len(variables)):
-            if string_temp[i] == variables[j]:
-                cont_numeros = 1
-                while i+cont_numeros < len(string_temp):
-                    # Revisa si a lado de la variable existe un operador
-                    for k in range(len(operadores)):
-                        if string_temp[i+cont_numeros] == operadores[k]:
-                            flag_error = True
-                            return mensaje_error, flag_error, diccionario_lexico
-                    # Revisa si a lado de la variable existe un número
-                    for k in range(len(numeros)):
-                        if string_temp[i+cont_numeros] == numeros[k]:
-                            flag_error = True
-                            return mensaje_error, flag_error, diccionario_lexico
-                    cont_numeros += 1
-                diccionario_lexico[string_temp] = "variable"
-                texto, flag_error, diccionario_lexico = dos_revisar_igual(lista_lexica,cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
-                if flag_error == True:
-                    return mensaje_error, flag_error, diccionario_lexico
-                return texto, flag_error, diccionario_lexico
+    variable_revisada, flag_error, diccionario_lexico = revisar_variable(string_temp)
+    # Si existe un error en la variable
+    if flag_error == True:
+        return mensaje_error, flag_error, diccionario_lexico
+    if variable_revisada == True:
+        texto, flag_error, diccionario_lexico = dos_revisar_igual(lista_lexica,cont_lexico, indice_cont_lexico-1, flag_error, diccionario_lexico)
+        return texto, flag_error, diccionario_lexico
+    return mensaje_error, flag_error, diccionario_lexico
 
 lista_lexica = []
+suma_lista_lexica = []
 diccionario_lexico = {}
+suma_diccionario_lexico = {}
 cont_lexico = 0
 indice_cont_lexico = 0
 string_comentario = ""
@@ -221,6 +282,7 @@ for line in file:
         lista_lexica.append(word)
         cont_lexico += 1
 
+    # Identifica el comentario dentro de la línea de código 
     for i in range(cont_lexico-1):
         if lista_lexica[i] == "//":
             flag_comentario = False
@@ -230,14 +292,51 @@ for line in file:
             # Borrar desde el indice especificado hasta el final
             #https://stackoverflow.com/questions/627435/how-to-remove-an-element-from-a-list-by-index
             del lista_lexica[i:cont_lexico]
-            lista_lexica.append(string_comentario)
+            # lista_lexica.append(string_comentario)
             break
 
     print(lista_lexica)
 
+    # Variable que va a servir para que se vaya desde el inicio hasta el final de la lista de variables
     indice_cont_lexico = cont_lexico
-    prueba, flag_error, diccionario_lexico = uno_revisar_variable(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico)
 
-    print(prueba)
+    # Primer paso
+    texto, flag_error, diccionario_lexico = uno_revisar_variable(lista_lexica, cont_lexico, indice_cont_lexico, flag_error, diccionario_lexico)
 
-        
+    print(texto)
+
+    lista_lexica.append(string_comentario)
+    suma_lista_lexica += lista_lexica
+    del suma_lista_lexica[-1]
+    suma_diccionario_lexico.update(diccionario_lexico)
+
+    lista_lexica = []
+    diccionario_lexico = {}
+    cont_lexico = 0
+    indice_cont_lexico = 0
+    string_comentario = ""
+    flag_comentario = False
+    flag_error = False
+
+file.close()
+
+html_string = "<p>"
+
+html = open("index.html", "w")
+
+for i in range(len(suma_lista_lexica)):
+    llave = suma_lista_lexica[i]
+    if suma_diccionario_lexico[llave] == "variable":
+        html_string += "<span style=\"color:blue\">" + llave + "</span>" + " "
+    elif suma_diccionario_lexico[llave] == "asignacion": 
+        html_string += "<span style=\"color:yellow\">" + llave + "</span>" + " "
+    elif suma_diccionario_lexico[llave] == "numero": 
+        html_string += "<span style=\"color:green\">" + llave + "</span>" + " "
+    elif suma_diccionario_lexico[llave] == "operador": 
+        if llave == ";":
+            html_string += "<span style=\"color:red\">" + llave + "</span></p>"
+            html.write(html_string)
+            html_string = ""
+        else: 
+            html_string += "<span style=\"color:orange\">" + llave + "</span>" + " "
+            
