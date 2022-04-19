@@ -1,5 +1,8 @@
 # SyntaxHighlighter
-Actividad Integradora 1, Resaltador de sintaxis (evidencia de competencia) .  Implementación de métodos computacionales (Gpo 601) (Haskell clase)
+Actividad Integradora 1, Resaltador de sintaxis (evidencia de competencia).  Implementación de métodos computacionales (Gpo 601) (Haskell clase)
+Andrés Fuentes Alanís A01177466 <br />
+Diego Burgarin A01620485 <br />
+Eduardo Pons A01721025 <br />
 
 ## Gramática
 1 → v2 <br />
